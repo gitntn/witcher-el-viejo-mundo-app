@@ -1,6 +1,6 @@
 /* Mapa de imágenes de la app.
    Las cartas provienen de fotos propias del juego, recortadas automáticamente.
-   "Trol" aún no tiene foto: usa el emblema de su terreno como respaldo. */
+   Si un monstruo no aparece aquí, la app usa el emblema de su terreno. */
 
 const CARD_SLUGS = {
   "Arachas": "arachas",
@@ -31,7 +31,7 @@ const CARD_SLUGS = {
   "Lamia": "lamia",
   "Leshen": "leshen",
   "Yghern": "yghern",
-  // "Trol": pendiente — añade la foto a Drive y créala como assets/img/cartas/trol.jpg
+  "Trol": "trol",
 };
 
 function cardImage(name) {

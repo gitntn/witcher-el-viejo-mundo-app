@@ -50,10 +50,9 @@ pestaña y retomar la cacería donde la dejaste.
 
 ## 🎨 Imágenes y animaciones
 
-- **28 cartas de monstruo reales** fotografiadas del juego y recortadas automáticamente
-  (detección de contornos + corrección de perspectiva). Falta únicamente la foto del
-  **Trol** (Nivel III): mientras no exista `assets/img/cartas/trol.jpg`, la app muestra
-  el emblema de su terreno como respaldo.
+- **Las 29 cartas de monstruo reales** fotografiadas del juego y recortadas
+  automáticamente (detección de contornos + corrección de perspectiva). Si algún día
+  faltara una imagen, la app muestra el emblema de su terreno como respaldo.
 - **Arte de terrenos** (bosque, montaña, agua) para emblemas y fondos, y la **portada del
   manual** como fondo de la pantalla de inicio con efecto Ken Burns.
 - **Animaciones de última generación**: transiciones de pantalla con la View Transitions
@@ -77,7 +76,7 @@ Es una web estática sin dependencias ni instalación:
 ├── css/styles.css      # Fantasía oscura + sistema de animaciones (tilt, embers, ken-burns)
 ├── assets/img/
 │   ├── portada.jpg     # Portada del manual (fondo de inicio)
-│   ├── cartas/         # 28 fotos de cartas recortadas (falta trol.jpg)
+│   ├── cartas/         # 29 fotos de cartas recortadas (todas las criaturas)
 │   └── terrenos/       # bosque.jpg, montana.jpg, agua.jpg
 └── js/
     ├── app.js          # Estado de partida, tablero, decisiones, resoluciones y tilt 3D
