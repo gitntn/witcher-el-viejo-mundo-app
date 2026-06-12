@@ -48,6 +48,20 @@ la mesa se concentre en jugar.
 La partida se guarda automáticamente en el navegador (`localStorage`): puedes cerrar la
 pestaña y retomar la cacería donde la dejaste.
 
+## 🎨 Imágenes y animaciones
+
+- **28 cartas de monstruo reales** fotografiadas del juego y recortadas automáticamente
+  (detección de contornos + corrección de perspectiva). Falta únicamente la foto del
+  **Trol** (Nivel III): mientras no exista `assets/img/cartas/trol.jpg`, la app muestra
+  el emblema de su terreno como respaldo.
+- **Arte de terrenos** (bosque, montaña, agua) para emblemas y fondos, y la **portada del
+  manual** como fondo de la pantalla de inicio con efecto Ken Burns.
+- **Animaciones de última generación**: transiciones de pantalla con la View Transitions
+  API, entradas escalonadas con desenfoque, cartas con **tilt 3D y brillo dinámico** al
+  pasar el ratón, brasas flotantes en las pantallas de cacería (azules en la de Dagon),
+  revelado dramático de la Decisión de Combate, destellos en botones y grano
+  cinematográfico. Todo se desactiva con `prefers-reduced-motion`.
+
 ## 🗡 Cómo usarla
 
 Es una web estática sin dependencias ni instalación:
@@ -60,10 +74,16 @@ Es una web estática sin dependencias ni instalación:
 
 ```
 ├── index.html          # Las 8 pantallas de la app
-├── css/styles.css      # Estética de fantasía oscura (pergamino, ámbar, acero)
+├── css/styles.css      # Fantasía oscura + sistema de animaciones (tilt, embers, ken-burns)
+├── assets/img/
+│   ├── portada.jpg     # Portada del manual (fondo de inicio)
+│   ├── cartas/         # 28 fotos de cartas recortadas (falta trol.jpg)
+│   └── terrenos/       # bosque.jpg, montana.jpg, agua.jpg
 └── js/
-    ├── app.js          # Estado de partida, tablero, decisiones y resoluciones
-    └── data/monsters.js# 29 monstruos: nivel, vida, tipo, habilidad y ~70 textos narrativos c/u
+    ├── app.js          # Estado de partida, tablero, decisiones, resoluciones y tilt 3D
+    └── data/
+        ├── monsters.js # 29 monstruos: nivel, vida, tipo, habilidad y ~70 textos c/u
+        └── images.js   # Mapa monstruo→carta, terrenos y portada
 ```
 
 ## 🧌 Datos de monstruos

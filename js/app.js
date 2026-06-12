@@ -105,6 +105,8 @@ const DECISION_KINDS = {
 
 const $ = (sel) => document.querySelector(sel);
 
+const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -126,6 +128,24 @@ function loreFor(name) {
   const tipo = (MONSTERS_DATA[name] && MONSTERS_DATA[name].tipo) || "";
   const hit = FAMILY_LORE.find((f) => f.match.test(tipo)) || FAMILY_LORE.find((f) => f.match.test(name));
   return hit ? hit.text : DEFAULT_LORE;
+}
+
+/* Tilt 3D con brillo dinámico (se desactiva con prefers-reduced-motion). */
+function attachTilt(el, maxDeg = 7) {
+  if (REDUCED_MOTION || !window.PointerEvent) return;
+  el.addEventListener("pointermove", (ev) => {
+    const r = el.getBoundingClientRect();
+    const px = (ev.clientX - r.left) / r.width;
+    const py = (ev.clientY - r.top) / r.height;
+    el.style.setProperty("--ry", ((px - 0.5) * 2 * maxDeg).toFixed(2) + "deg");
+    el.style.setProperty("--rx", ((0.5 - py) * 2 * maxDeg).toFixed(2) + "deg");
+    el.style.setProperty("--gx", (px * 100).toFixed(1) + "%");
+    el.style.setProperty("--gy", (py * 100).toFixed(1) + "%");
+  });
+  el.addEventListener("pointerleave", () => {
+    el.style.setProperty("--rx", "0deg");
+    el.style.setProperty("--ry", "0deg");
+  });
 }
 
 /* ---------------- Estado ---------------- */
@@ -218,9 +238,18 @@ const SCREENS = [
   "screen-monstruo", "screen-resolucion", "screen-brujos", "screen-dagon",
 ];
 
-function show(id) {
+function applyShow(id) {
   SCREENS.forEach((s) => $("#" + s).classList.toggle("hidden", s !== id));
-  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  window.scrollTo(0, 0);
+}
+
+/* Cambia de pantalla con la View Transitions API si está disponible. */
+function show(id) {
+  if (!REDUCED_MOTION && document.startViewTransition) {
+    document.startViewTransition(() => applyShow(id));
+  } else {
+    applyShow(id);
+  }
 }
 
 document.addEventListener("click", (ev) => {
@@ -279,6 +308,7 @@ function renderPreparacion() {
   list.innerHTML = "";
   SETUP_TABLE[n].forEach((p, i) => {
     const li = document.createElement("li");
+    li.style.setProperty("--i", i);
     const who = state.solo ? "B" : (i + 1);
     li.innerHTML = `
       <span class="prep-badge">${who}</span>
@@ -292,9 +322,11 @@ function renderPreparacion() {
 
   const extras = $("#prep-extras");
   extras.innerHTML = "";
+  let extraIdx = 0;
   const addExtra = (html) => {
     const div = document.createElement("div");
     div.className = "prep-extra";
+    div.style.setProperty("--i", extraIdx++);
     div.innerHTML = html;
     extras.appendChild(div);
   };
@@ -328,20 +360,28 @@ function renderTablero() {
   state.active.forEach((m, idx) => {
     const t = TERRAINS[m.terrain];
     const d = MONSTERS_DATA[m.name];
+    const img = cardImage(m.name);
     const card = document.createElement("button");
     card.className = "mcard";
     card.style.setProperty("--tcolor", t.color);
+    card.style.setProperty("--i", idx);
+    const artUrl = img || TERRAIN_IMG[m.terrain];
     card.innerHTML = `
       <span class="mcard-level">Nivel ${roman(m.level)}</span>
-      <span class="mcard-terrain">${t.icon} ${t.label}</span>
-      <span class="mcard-name">${m.name}</span>
-      <span class="mcard-type">${d.tipo} · Vida ${d.vida}</span>
-      <ul class="mcard-stats">
-        <li><span class="k">Localización activa</span><span class="v">${m.location}</span></li>
-        <li><span class="k">Localización de debilidad</span><span class="v weak">${m.weakLocation}</span></li>
-      </ul>
-      <span class="mcard-cta">Rastrear y combatir →</span>`;
+      <span class="mcard-art${img ? "" : " is-emblema"}" style="--art:url('${artUrl}')"></span>
+      <span class="mcard-body">
+        <span class="mcard-terrain">${t.icon} ${t.label}</span>
+        <span class="mcard-name">${m.name}</span>
+        <span class="mcard-type">${d.tipo} · Vida ${d.vida}</span>
+        <ul class="mcard-stats">
+          <li><span class="k">Localización activa</span><span class="v">${m.location}</span></li>
+          <li><span class="k">Localización de debilidad</span><span class="v weak">${m.weakLocation}</span></li>
+        </ul>
+        <span class="mcard-cta">Rastrear y combatir →</span>
+      </span>
+      <span class="mcard-glare"></span>`;
     card.addEventListener("click", () => openMonster(idx));
+    attachTilt(card, 5);
     wrap.appendChild(card);
   });
 
@@ -365,16 +405,29 @@ $("#btn-reset").addEventListener("click", () => {
 /* ---------------- 4. Evento de Monstruo (Cacería) ---------------- */
 
 let currentIdx = null;
-let lastOutcome = null;
 
 function openMonster(idx) {
   currentIdx = idx;
-  lastOutcome = null;
   const m = state.active[idx];
   const d = MONSTERS_DATA[m.name];
   const t = TERRAINS[m.terrain];
 
-  $("#monster-stage").style.setProperty("--tcolor", t.color);
+  const stage = $("#monster-stage");
+  stage.style.setProperty("--tcolor", t.color);
+
+  const img = cardImage(m.name);
+  const backdrop = img || TERRAIN_IMG[m.terrain];
+  stage.querySelector(".stage-backdrop").style.setProperty("--m-img", `url('${backdrop}')`);
+
+  const fig = $("#m-card-float");
+  if (img) {
+    fig.classList.remove("sin-carta");
+    $("#m-card-img").src = img;
+    $("#m-card-img").alt = "Carta de " + m.name;
+  } else {
+    fig.classList.add("sin-carta");
+  }
+
   $("#m-terrain").textContent = `${t.icon} ${t.label} · ${m.location}`;
   $("#m-name").textContent = m.name;
   $("#m-meta").textContent = `${d.tipo} · Nivel ${roman(m.level)} · Reserva de Vida: ${d.vida} · Debilidad: ${m.weakLocation}`;
@@ -397,6 +450,9 @@ function rollDecision() {
   const k = DECISION_KINDS[kind];
 
   const box = $("#decision-result");
+  // reinicia la animación de revelado
+  box.classList.add("hidden");
+  void box.offsetWidth;
   box.style.setProperty("--dcolor", k.color);
   $("#d-tag").textContent = k.tag;
   $("#d-texto").textContent = "«" + texto + "»";
@@ -509,7 +565,6 @@ function resolveDefeat() {
     ...commonEnd(),
     "Tu Turno termina. Lámete las heridas, brujo: la bestia seguirá ahí mañana.",
   ];
-  steps[0] = steps[0]; // primer paso ya formateado
 
   showResolution({
     title: "☠ La bestia te venció",
@@ -526,8 +581,9 @@ function showResolution({ title, sub, steps, spawnHtml, terrainColor, grim }) {
   $("#res-sub").textContent = sub;
   const ul = $("#res-steps");
   ul.innerHTML = "";
-  steps.forEach((s) => {
+  steps.forEach((s, i) => {
     const li = document.createElement("li");
+    li.style.setProperty("--i", i);
     if (grim) li.classList.add("bad");
     li.innerHTML = s;
     ul.appendChild(li);
@@ -656,8 +712,9 @@ function dagonOutcome(drivenAway) {
       "Durante la <strong>Fase III de este Turno robas 1 carta menos</strong>.",
     ];
   }
-  items.forEach((h) => {
+  items.forEach((h, i) => {
     const li = document.createElement("li");
+    li.style.setProperty("--i", i);
     if (!drivenAway) li.classList.add("bad");
     li.innerHTML = h;
     ul.appendChild(li);
@@ -673,13 +730,14 @@ $("#btn-dagon-otra").addEventListener("click", renderDagon);
 
 function boot() {
   buildPlayerPicker();
+  attachTilt($("#m-card-float"), 9);
   const saved = load();
   if (saved) {
     state = saved;
     renderTablero();
-    show("screen-tablero");
+    applyShow("screen-tablero");
   } else {
-    show("screen-inicio");
+    applyShow("screen-inicio");
   }
 }
 

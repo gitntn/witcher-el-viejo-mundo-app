@@ -5,29 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>El Viejo Mundo — Compañero de Caza</title>
 <meta name="description" content="App companion para The Witcher: El Viejo Mundo. Gestiona los monstruos del tablero, las decisiones de combate, la Lucha entre Brujos y la pelea contra Dagon.">
+<meta name="theme-color" content="#0b0907">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="assets/img/portada.jpg">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 <div class="fog fog-a"></div>
 <div class="fog fog-b"></div>
+<div class="grain"></div>
 
 <main id="app">
 
   <!-- ============ 1. PANTALLA DE INICIO (SETUP) ============ -->
   <section id="screen-inicio" class="screen">
+    <div class="hero-bg" aria-hidden="true"></div>
     <header class="hero">
-      <p class="hero-over">The Witcher</p>
-      <h1 class="hero-title">El Viejo Mundo</h1>
-      <p class="hero-sub">Compañero de Caza</p>
-      <div class="rule-divider"><span>✦</span></div>
-      <p class="hero-flavor">«Un cobarde muere cien veces, mientras que un hombre valiente solo muere una vez.
+      <p class="hero-over anim-1">The Witcher</p>
+      <h1 class="hero-title anim-2">El Viejo Mundo</h1>
+      <p class="hero-sub anim-3">Compañero de Caza</p>
+      <div class="rule-divider anim-4"><span>✦</span></div>
+      <p class="hero-flavor anim-5">«Un cobarde muere cien veces, mientras que un hombre valiente solo muere una vez.
       La dama Fortuna favorece a los valientes y odia a los cobardes.»</p>
     </header>
 
-    <div class="panel">
+    <div class="panel anim-6">
       <h2 class="panel-title">¿Cuántos brujos salen de caza?</h2>
       <div id="player-picker" class="player-picker" role="group" aria-label="Cantidad de jugadores"></div>
       <p id="setup-note" class="setup-note"></p>
@@ -38,11 +42,11 @@
   <!-- ============ 2. PANTALLA DE PREPARACIÓN (PLAYER SETUP) ============ -->
   <section id="screen-preparacion" class="screen hidden">
     <header class="screen-head">
-      <h1 class="screen-title">Preparación de la Partida</h1>
-      <p class="screen-sub" id="prep-sub"></p>
+      <h1 class="screen-title anim-1">Preparación de la Partida</h1>
+      <p class="screen-sub anim-2" id="prep-sub"></p>
     </header>
 
-    <div class="panel">
+    <div class="panel anim-3">
       <h2 class="panel-title">Compensaciones iniciales</h2>
       <ul id="prep-list" class="prep-list"></ul>
       <div id="prep-extras"></div>
@@ -56,13 +60,13 @@
   <!-- ============ 3. TABLERO PRINCIPAL (RASTROS ACTIVOS) ============ -->
   <section id="screen-tablero" class="screen hidden">
     <header class="screen-head">
-      <h1 class="screen-title">Rastros Activos</h1>
-      <p class="screen-sub">Tres bestias asolan el continente. Elige tu contrato, brujo.</p>
+      <h1 class="screen-title anim-1">Rastros Activos</h1>
+      <p class="screen-sub anim-2">Tres bestias asolan el continente. Elige tu contrato, brujo.</p>
     </header>
 
     <div id="board-cards" class="board-cards"></div>
 
-    <div class="global-actions panel">
+    <div class="global-actions panel anim-5">
       <h2 class="panel-title small">Eventos globales</h2>
       <div class="btn-row">
         <button id="btn-brujos" class="btn btn-steel">⚔ Lucha Entre Brujos</button>
@@ -70,7 +74,7 @@
       </div>
     </div>
 
-    <footer class="board-foot">
+    <footer class="board-foot anim-6">
       <span id="board-status"></span>
       <button id="btn-reset" class="link-danger">Nueva partida</button>
     </footer>
@@ -79,34 +83,49 @@
   <!-- ============ 4. PANTALLA DE EVENTO DE MONSTRUO (CACERÍA) ============ -->
   <section id="screen-monstruo" class="screen hidden">
     <div id="monster-stage" class="monster-stage">
-      <div class="monster-veil"></div>
+      <div class="stage-backdrop" aria-hidden="true"></div>
+      <div class="monster-veil" aria-hidden="true"></div>
+      <div class="embers" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
       <div class="monster-stage-inner">
         <button class="btn btn-ghost btn-back" data-goto="screen-tablero">← Tablero</button>
-        <p id="m-terrain" class="m-terrain"></p>
-        <h1 id="m-name" class="m-name"></h1>
-        <p id="m-meta" class="m-meta"></p>
-        <p id="m-narrativa" class="m-narrativa"></p>
 
-        <div class="rule-box">
-          <p class="rule-box-label">⚜ Aplica esta regla del monstruo</p>
-          <p id="m-habilidad" class="rule-box-text"></p>
-        </div>
+        <div class="monster-layout">
+          <figure id="m-card-float" class="m-card-float anim-3" aria-hidden="true">
+            <img id="m-card-img" alt="" draggable="false">
+            <span class="m-card-glare"></span>
+          </figure>
 
-        <div id="decision-zone">
-          <button id="btn-decision" class="btn btn-primary btn-big">⚄ Generar una Decisión de Combate</button>
+          <div class="monster-info">
+            <p id="m-terrain" class="m-terrain anim-1"></p>
+            <h1 id="m-name" class="m-name anim-2"></h1>
+            <p id="m-meta" class="m-meta anim-3"></p>
+            <p id="m-narrativa" class="m-narrativa anim-4"></p>
 
-          <div id="decision-result" class="decision-result hidden">
-            <p id="d-tag" class="d-tag"></p>
-            <p id="d-texto" class="d-texto"></p>
-            <p id="d-efecto" class="d-efecto"></p>
-            <button id="btn-redecision" class="link-soft">⟳ Generar otra decisión</button>
-          </div>
+            <div class="rule-box anim-5">
+              <p class="rule-box-label">⚜ Aplica esta regla del monstruo</p>
+              <p id="m-habilidad" class="rule-box-text"></p>
+            </div>
 
-          <div id="combat-actions" class="combat-actions hidden">
-            <p class="combat-hint">Resolved el combate en la mesa y registrad el resultado:</p>
-            <button id="btn-victoria" class="btn btn-win">⚔ La bestia ha caído</button>
-            <button id="btn-huida" class="btn btn-flee">🌫 El monstruo huyó del combate</button>
-            <button id="btn-derrota" class="btn btn-lose">☠ La bestia te venció</button>
+            <div id="decision-zone" class="anim-6">
+              <button id="btn-decision" class="btn btn-primary btn-big">⚄ Generar una Decisión de Combate</button>
+
+              <div id="decision-result" class="decision-result hidden">
+                <p id="d-tag" class="d-tag"></p>
+                <p id="d-texto" class="d-texto"></p>
+                <p id="d-efecto" class="d-efecto"></p>
+                <button id="btn-redecision" class="link-soft">⟳ Generar otra decisión</button>
+              </div>
+
+              <div id="combat-actions" class="combat-actions hidden">
+                <p class="combat-hint">Resolved el combate en la mesa y registrad el resultado:</p>
+                <button id="btn-victoria" class="btn btn-win">⚔ La bestia ha caído</button>
+                <button id="btn-huida" class="btn btn-flee">🌫 El monstruo huyó del combate</button>
+                <button id="btn-derrota" class="btn btn-lose">☠ La bestia te venció</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -116,10 +135,10 @@
   <!-- ============ 6. RESOLUCIONES DEL COMBATE ============ -->
   <section id="screen-resolucion" class="screen hidden">
     <header class="screen-head">
-      <h1 id="res-title" class="screen-title"></h1>
-      <p id="res-sub" class="screen-sub"></p>
+      <h1 id="res-title" class="screen-title anim-1"></h1>
+      <p id="res-sub" class="screen-sub anim-2"></p>
     </header>
-    <div class="panel">
+    <div class="panel anim-3">
       <ul id="res-steps" class="res-steps"></ul>
       <div id="res-spawn" class="spawn-note hidden"></div>
       <button id="btn-res-volver" class="btn btn-primary btn-big">Volver al Tablero</button>
@@ -129,11 +148,11 @@
   <!-- ============ MODO ESPECIAL: LUCHA ENTRE BRUJOS ============ -->
   <section id="screen-brujos" class="screen hidden">
     <header class="screen-head">
-      <h1 class="screen-title">Lucha Entre Brujos</h1>
-      <p class="screen-sub">El acero contra el acero. La reputación está en juego.</p>
+      <h1 class="screen-title anim-1">Lucha Entre Brujos</h1>
+      <p class="screen-sub anim-2">El acero contra el acero. La reputación está en juego.</p>
     </header>
 
-    <div class="panel">
+    <div class="panel anim-3">
       <h2 class="panel-title small">Fase de Apuestas</h2>
       <ul class="info-list" id="apuestas-list"></ul>
 
@@ -176,23 +195,28 @@
   <!-- ============ MODO ESPECIAL: LUCHA CONTRA DAGON ============ -->
   <section id="screen-dagon" class="screen hidden">
     <div class="monster-stage dagon-stage">
-      <div class="monster-veil"></div>
+      <div class="stage-backdrop dagon-backdrop" aria-hidden="true"></div>
+      <div class="monster-veil" aria-hidden="true"></div>
+      <div class="embers embers-abyss" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
       <div class="monster-stage-inner">
         <button class="btn btn-ghost btn-back" data-goto="screen-tablero">← Tablero</button>
-        <p class="m-terrain">🌊 Expansión Islas Skellige · Localización de Dagon</p>
-        <h1 class="m-name">Dagon</h1>
-        <p class="m-meta">Señor de las Profundidades · Reserva de Vida: 15</p>
-        <p class="m-narrativa">Las olas se abren y el horror abisal emerge entre cánticos de los vodyanoi.
+        <p class="m-terrain anim-1">🌊 Expansión Islas Skellige · Localización de Dagon</p>
+        <h1 class="m-name anim-2">Dagon</h1>
+        <p class="m-meta anim-3">Señor de las Profundidades · Reserva de Vida: 15</p>
+        <p class="m-narrativa anim-4">Las olas se abren y el horror abisal emerge entre cánticos de los vodyanoi.
         Solo puedes navegar hasta su Localización cuando Dagon ha emergido. No se lee carta de
         Exploración de Skellige en este viaje: la presa es otra.</p>
 
-        <div class="rule-box">
+        <div class="rule-box anim-5">
           <p class="rule-box-label">⚜ Aplica esta regla del monstruo</p>
           <p class="rule-box-text">Antes del primer Ataque de Dagon: el Jugador descarta 1 carta aleatoria
           de su mano y baja 1 su nivel de Escudo por cada Carta de Trofeo que posea.</p>
         </div>
 
-        <div id="dagon-pick" class="combat-actions">
+        <div id="dagon-pick" class="combat-actions anim-6">
           <p class="combat-hint">Combatid en la mesa siguiendo las reglas estándar y registrad el resultado:</p>
           <button id="btn-dagon-ahuyentado" class="btn btn-win">🌊 Dagon fue ahuyentado</button>
           <button id="btn-dagon-derrota" class="btn btn-lose">☠ Derrota Total</button>
@@ -212,6 +236,7 @@
 </main>
 
 <script src="js/data/monsters.js"></script>
+<script src="js/data/images.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
