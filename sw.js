@@ -3,7 +3,7 @@
    Estrategia: cache-first para los recursos propios; la red solo se usa
    como respaldo o para recursos externos (fuentes de Google). */
 
-const CACHE = "viejo-mundo-v3";
+const CACHE = "viejo-mundo-v4";
 
 const CARDS = [
   "arachas", "arpia", "arquespor", "barghest", "boira", "demonio-podrido",
@@ -50,20 +50,26 @@ self.addEventListener("activate", (ev) => {
 self.addEventListener("fetch", (ev) => {
   const req = ev.request;
   if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  const sameOrigin = url.origin === self.location.origin;
 
-  // Recursos externos (fuentes): red primero, cae a caché.
-  if (new URL(req.url).origin !== self.location.origin) {
+  // App shell (HTML/JS/CSS/manifest y navegaciones): RED PRIMERO, para que
+  // las actualizaciones de código se vean siempre que haya conexión.
+  const isShell = req.mode === "navigate" ||
+    (sameOrigin && /\.(html|js|css|webmanifest)$/i.test(url.pathname));
+
+  if (isShell) {
     ev.respondWith(
       fetch(req).then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy));
         return res;
-      }).catch(() => caches.match(req))
+      }).catch(() => caches.match(req).then((r) => r || caches.match("./index.html")))
     );
     return;
   }
 
-  // Recursos propios: caché primero, actualiza en segundo plano.
+  // Imágenes, fuentes y demás: CACHÉ PRIMERO + refresco en segundo plano.
   ev.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req).then((res) => {

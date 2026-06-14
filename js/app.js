@@ -297,6 +297,7 @@ function buildPlayerPicker() {
 
 $("#btn-continuar").addEventListener("click", () => {
   state = newState(pendingPlayers);
+  $("#btn-resume").classList.add("hidden");
   renderPreparacion();
   show("screen-preparacion");
 });
@@ -656,6 +657,50 @@ $("#btn-res-volver").addEventListener("click", () => {
 
 /* ---------------- Lucha Entre Brujos ---------------- */
 
+const SCHOOLS = [
+  { id: "lobo",   name: "Lobo",   full: "Escuela del Lobo" },
+  { id: "grifo",  name: "Grifo",  full: "Escuela del Grifo" },
+  { id: "oso",    name: "Oso",    full: "Escuela del Oso" },
+  { id: "gato",   name: "Gato",   full: "Escuela del Gato" },
+  { id: "vibora", name: "Víbora", full: "Escuela de la Víbora" },
+];
+
+let brujoSchools = { atacante: null, defensor: null };
+
+function buildSchoolChips() {
+  ["atacante", "defensor"].forEach((side) => {
+    const wrap = $("#schools-" + side);
+    wrap.innerHTML = "";
+    SCHOOLS.forEach((s) => {
+      const chip = document.createElement("button");
+      chip.className = "school-chip";
+      chip.dataset.school = s.id;
+      chip.innerHTML = `<svg class="school-med" aria-hidden="true"><use href="#i-${s.id}"></use></svg><span>${s.name}</span>`;
+      chip.addEventListener("click", () => {
+        const already = brujoSchools[side] === s.id;
+        brujoSchools[side] = already ? null : s.id;
+        wrap.querySelectorAll(".school-chip").forEach((c) => c.classList.remove("sel"));
+        if (!already) chip.classList.add("sel");
+      });
+      wrap.appendChild(chip);
+    });
+  });
+}
+
+function schoolFull(id) {
+  const s = SCHOOLS.find((x) => x.id === id);
+  return s ? s.full : null;
+}
+
+function brujoTitle(side, isWinner) {
+  const id = brujoSchools[side];
+  const role = side === "atacante" ? "Brujo Atacante" : "Brujo Defensor";
+  const label = id ? schoolFull(id) : role;
+  const lead = isWinner ? ico("trophy") + " Vencedor · " : "";
+  const medal = id ? ico(id, "title-med") + " " : "";
+  return lead + medal + label;
+}
+
 function renderBrujos() {
   const list = $("#apuestas-list");
   const twoP = state && state.playerCount === 2;
@@ -673,6 +718,8 @@ function renderBrujos() {
     li.innerHTML = html;
     list.appendChild(li);
   });
+  brujoSchools = { atacante: null, defensor: null };
+  buildSchoolChips();
   $("#brujos-result").classList.add("hidden");
   $("#brujos-pick").classList.remove("hidden");
 }
@@ -688,8 +735,8 @@ function brujosOutcome(attackerWon) {
   loseList.innerHTML = "";
 
   if (attackerWon) {
-    $("#bw-title").innerHTML = ico("trophy") + " Vencedor: Brujo Atacante";
-    $("#bl-title").textContent = "Brujo Defensor";
+    $("#bw-title").innerHTML = brujoTitle("atacante", true);
+    $("#bl-title").innerHTML = brujoTitle("defensor", false);
     [
       "Toma 1 <strong>Trofeo de Brujo</strong> de la Escuela derrotada (si aún no lo tienes: máximo 1 por Escuela).",
       "Lee su descripción de Combate y <strong>avanza 1 en el Marcador de Trofeo</strong>.",
@@ -703,8 +750,8 @@ function brujosOutcome(attackerWon) {
       "No pierdes ninguno de tus Trofeos.",
     ].forEach((h) => { const li = document.createElement("li"); li.innerHTML = h; loseList.appendChild(li); });
   } else {
-    $("#bw-title").innerHTML = ico("trophy") + " Vencedor: Brujo Defensor";
-    $("#bl-title").textContent = "Brujo Atacante";
+    $("#bw-title").innerHTML = brujoTitle("defensor", true);
+    $("#bl-title").innerHTML = brujoTitle("atacante", false);
     [
       "Gana <strong>Oro según la Reputación del oponente</strong> (1, 2 o 3 del Marcador de Trofeo).",
       "<strong>No obtiene Trofeo</strong> (solo el atacante puede ganarlo).",
@@ -774,17 +821,23 @@ $("#btn-dagon-otra").addEventListener("click", renderDagon);
 
 /* ---------------- Arranque ---------------- */
 
+$("#btn-resume").addEventListener("click", () => {
+  if (!state || !state.started) return;
+  renderTablero();
+  show("screen-tablero");
+});
+
 function boot() {
   buildPlayerPicker();
   attachTilt($("#m-card-float"), 9);
   const saved = load();
   if (saved) {
+    // hay una partida guardada: se ofrece continuarla, pero siempre
+    // arrancamos en la pantalla de inicio (selección de jugadores).
     state = saved;
-    renderTablero();
-    applyShow("screen-tablero");
-  } else {
-    applyShow("screen-inicio");
+    $("#btn-resume").classList.remove("hidden");
   }
+  applyShow("screen-inicio");
 }
 
 boot();

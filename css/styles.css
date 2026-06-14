@@ -918,6 +918,37 @@ body{
   from{opacity:.65;}
   to{opacity:1;}
 }
+.opt{font-size:.7rem; color:var(--ink-faint); letter-spacing:.08em; font-weight:400; text-transform:none;}
+
+/* selector de escuelas (medallones) */
+.schools-pick{display:flex; flex-direction:column; gap:14px; margin-bottom:4px;}
+.school-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+.school-row-label{
+  flex:0 0 70px;
+  font-family:var(--serif-display); font-size:.76rem;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-dim);
+}
+.school-chips{display:flex; gap:8px; flex-wrap:wrap;}
+.school-chip{
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  width:62px; padding:9px 4px 6px;
+  background:linear-gradient(180deg, #221a12, #15100b);
+  border:1px solid var(--panel-edge); border-radius:8px;
+  color:var(--ink-dim); cursor:pointer;
+  transition:transform .22s var(--ease-dramatic), border-color .2s, color .2s, box-shadow .3s;
+}
+.school-med{width:34px; height:34px;}
+.school-chip span{font-family:var(--serif-display); font-size:.6rem; letter-spacing:.06em; text-transform:uppercase;}
+.school-chip:hover{color:var(--ink); border-color:var(--amber); transform:translateY(-3px);}
+.school-chip.sel{
+  color:var(--amber-hi); border-color:var(--amber-hi);
+  background:linear-gradient(180deg, #2c2110, #1a1208);
+  box-shadow:0 0 16px rgba(217,156,32,.28);
+}
+.school-chip.sel .school-med{animation:med-spin .6s var(--ease-dramatic);}
+@keyframes med-spin{from{transform:rotate(-40deg) scale(.65);} to{transform:none;}}
+.title-med{width:1.25em; height:1.25em; vertical-align:-0.24em;}
+
 .info-list{list-style:none; color:var(--ink-dim);}
 .info-list li{padding:7px 0 7px 26px; position:relative;}
 .info-list li::before{content:"◆"; position:absolute; left:4px; color:var(--steel); font-size:.7rem; top:12px;}
