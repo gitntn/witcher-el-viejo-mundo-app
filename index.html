@@ -19,6 +19,20 @@
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+<!-- ============ SPRITE DE ICONOS SVG (oculto) ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-tree" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 L8.4 8 H10 L6.6 13 H8.4 L4.5 19 H10.8 V22 H13.2 V19 H19.5 L15.6 13 H17.4 L14 8 H15.6 Z"/></symbol>
+  <symbol id="i-mountain" viewBox="0 0 24 24"><path fill="currentColor" d="M2 20 L9 6 L13.2 13.5 L15.8 9.5 L22 20 Z"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9 q3 -4 6 0 t6 0 t6 0"/><path d="M3 15 q3 -4 6 0 t6 0 t6 0"/></g></symbol>
+  <symbol id="i-die" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><g fill="currentColor"><circle cx="8" cy="8" r="1.5"/><circle cx="16" cy="8" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="8" cy="16" r="1.5"/><circle cx="16" cy="16" r="1.5"/></g></symbol>
+  <symbol id="i-swords" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 3.5 L11 11 M14.5 3.5 H18.5 V7.5"/><path d="M5.5 3.5 L13 11 M9.5 3.5 H5.5 V7.5"/><path d="M9.5 13 L5 17.5 M4 16.5 L7.5 20 M5.5 18.5 L3.5 20.5"/><path d="M14.5 13 L19 17.5 M20 16.5 L16.5 20 M18.5 18.5 L20.5 20.5"/></g></symbol>
+  <symbol id="i-wind" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8 H13 a2.2 2.2 0 1 0 -2.2 -2.2"/><path d="M3 13 H17 a2.4 2.4 0 1 1 -2.4 2.4"/><path d="M3 18 H10 a2 2 0 1 0 -2 -2"/></g></symbol>
+  <symbol id="i-skull" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 2 C6.8 2 4 5.6 4 10.2 c0 2.6 1.1 4.3 2.6 5.4 V18 c0 1 .7 1.6 1.7 1.6 H8 v2 h1.6 v-1.8 h1.2 V21.6 h.6 V19.8 h1.2 V21.6 H14.4 v-2 H16 c1 0 1.7 -.6 1.7 -1.6 v-2.4 C19.1 14.5 20 12.8 20 10.2 16 5.6 17.2 2 12 2 Z M9 9.2 a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0 -3.8 Z M15 9.2 a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0 -3.8 Z M12 13.4 l1.3 2.4 h-2.6 Z"/></symbol>
+  <symbol id="i-medallion" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path fill="currentColor" fill-rule="evenodd" d="M12 18.4 L8.6 16.2 L7.3 12.4 L8.7 9.9 L6.7 6.2 L10.1 8.8 L12 10 L13.9 8.8 L17.3 6.2 L15.3 9.9 L16.7 12.4 L15.4 16.2 Z M9.5 11.6 L11 12.1 L10.4 13.5 L9.2 12.9 Z M14.5 11.6 L13 12.1 L13.6 13.5 L14.8 12.9 Z M12 14 L13 15 L12 16 L11 15 Z"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1.2"/><path fill="currentColor" d="M12 8.5 l1 2 2 .3 -1.5 1.5 .4 2.2 -1.9 -1 -1.9 1 .4 -2.2 -1.5 -1.5 2 -.3 Z"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 H17 V9 a5 5 0 0 1 -10 0 Z"/><path d="M7 5.5 H4 V7.5 a3 3 0 0 0 3 3"/><path d="M17 5.5 H20 V7.5 a3 3 0 0 1 -3 3"/><path d="M12 14 V17 M9 20 H15 M10 20 a2 3 0 0 1 4 0"/></g></symbol>
+</svg>
+
 <div class="fog fog-a"></div>
 <div class="fog fog-b"></div>
 <div class="grain"></div>
@@ -29,6 +43,7 @@
   <section id="screen-inicio" class="screen">
     <div class="hero-bg" aria-hidden="true"></div>
     <header class="hero">
+      <svg class="hero-medallion anim-1" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-medallion"></use></svg>
       <p class="hero-over anim-1">The Witcher</p>
       <h1 class="hero-title anim-2">El Viejo Mundo</h1>
       <p class="hero-sub anim-3">Compañero de Caza</p>
@@ -58,7 +73,7 @@
       <div id="prep-extras"></div>
       <div class="btn-row">
         <button class="btn btn-ghost" data-goto="screen-inicio">← Volver</button>
-        <button id="btn-iniciar-caceria" class="btn btn-primary btn-big">🗡 Iniciar la Cacería</button>
+        <button id="btn-iniciar-caceria" class="btn btn-primary btn-big"><svg class="ico" aria-hidden="true"><use href="#i-swords"></use></svg> Iniciar la Cacería</button>
       </div>
     </div>
   </section>
@@ -75,8 +90,8 @@
     <div class="global-actions panel anim-5">
       <h2 class="panel-title small">Eventos globales</h2>
       <div class="btn-row">
-        <button id="btn-brujos" class="btn btn-steel">⚔ Lucha Entre Brujos</button>
-        <button id="btn-dagon" class="btn btn-abyss">🌊 Lucha contra Dagon</button>
+        <button id="btn-brujos" class="btn btn-steel"><svg class="ico" aria-hidden="true"><use href="#i-swords"></use></svg> Lucha Entre Brujos</button>
+        <button id="btn-dagon" class="btn btn-abyss"><svg class="ico" aria-hidden="true"><use href="#i-wave"></use></svg> Lucha contra Dagon</button>
       </div>
     </div>
 
@@ -116,7 +131,12 @@
             </div>
 
             <div id="decision-zone" class="anim-6">
-              <button id="btn-decision" class="btn btn-primary btn-big">⚄ Generar una Decisión de Combate</button>
+              <button id="btn-decision" class="btn btn-primary btn-big"><svg class="ico" aria-hidden="true"><use href="#i-die"></use></svg> Generar una Decisión de Combate</button>
+
+              <div id="roll-overlay" class="roll-overlay hidden" aria-hidden="true">
+                <svg class="roll-medallion" viewBox="0 0 24 24"><use href="#i-medallion"></use></svg>
+                <p class="roll-text">El destino reparte sus cartas…</p>
+              </div>
 
               <div id="decision-result" class="decision-result hidden">
                 <p id="d-tag" class="d-tag"></p>
@@ -127,9 +147,9 @@
 
               <div id="combat-actions" class="combat-actions hidden">
                 <p class="combat-hint">Resolved el combate en la mesa y registrad el resultado:</p>
-                <button id="btn-victoria" class="btn btn-win">⚔ La bestia ha caído</button>
-                <button id="btn-huida" class="btn btn-flee">🌫 El monstruo huyó del combate</button>
-                <button id="btn-derrota" class="btn btn-lose">☠ La bestia te venció</button>
+                <button id="btn-victoria" class="btn btn-win"><svg class="ico" aria-hidden="true"><use href="#i-swords"></use></svg> La bestia ha caído</button>
+                <button id="btn-huida" class="btn btn-flee"><svg class="ico" aria-hidden="true"><use href="#i-wind"></use></svg> El monstruo huyó del combate</button>
+                <button id="btn-derrota" class="btn btn-lose"><svg class="ico" aria-hidden="true"><use href="#i-skull"></use></svg> La bestia te venció</button>
               </div>
             </div>
           </div>
@@ -224,8 +244,8 @@
 
         <div id="dagon-pick" class="combat-actions anim-6">
           <p class="combat-hint">Combatid en la mesa siguiendo las reglas estándar y registrad el resultado:</p>
-          <button id="btn-dagon-ahuyentado" class="btn btn-win">🌊 Dagon fue ahuyentado</button>
-          <button id="btn-dagon-derrota" class="btn btn-lose">☠ Derrota Total</button>
+          <button id="btn-dagon-ahuyentado" class="btn btn-win"><svg class="ico" aria-hidden="true"><use href="#i-wave"></use></svg> Dagon fue ahuyentado</button>
+          <button id="btn-dagon-derrota" class="btn btn-lose"><svg class="ico" aria-hidden="true"><use href="#i-skull"></use></svg> Derrota Total</button>
         </div>
 
         <div id="dagon-result" class="hidden">

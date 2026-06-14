@@ -63,10 +63,17 @@ la mesa de juego aunque no haya wifi.
   faltara una imagen, la app muestra el emblema de su terreno como respaldo.
 - **Arte de terrenos** (bosque, montaña, agua) para emblemas y fondos, y la **portada del
   manual** como fondo de la pantalla de inicio con efecto Ken Burns.
+- **Set de iconos SVG propios** (dibujados a mano y verificados por rasterizado): terrenos
+  (pino, montaña, olas), dado, espadas cruzadas, ráfaga de viento, calavera, **medallón de
+  lobo**, moneda y trofeo. Se montan como sprite inline (`<symbol>` + `<use>`), heredan el
+  color del contexto (`currentColor`) y reemplazan a los emoji, que se veían distintos en
+  cada dispositivo.
 - **Animaciones de última generación**: transiciones de pantalla con la View Transitions
   API, entradas escalonadas con desenfoque, cartas con **tilt 3D y brillo dinámico** al
-  pasar el ratón, brasas flotantes en las pantallas de cacería (azules en la de Dagon),
-  revelado dramático de la Decisión de Combate, destellos en botones y grano
+  pasar el ratón, **medallón de brujo que vibra** (como cerca de un monstruo), **tirada
+  animada del destino** al generar la Decisión de Combate (el medallón gira y cambia de
+  color antes de revelar el resultado), brasas flotantes en las pantallas de cacería
+  (azules en la de Dagon), revelado dramático de la decisión, destellos en botones y grano
   cinematográfico. Todo se desactiva con `prefers-reduced-motion`.
 
 ## 🗡 Cómo usarla

@@ -10,10 +10,15 @@
 
 const STORAGE_KEY = "viejoMundoCompanion.v1";
 
+/* Devuelve el marcado de un icono SVG del sprite (#i-<id>). */
+function ico(id, extra) {
+  return `<svg class="ico${extra ? " " + extra : ""}" aria-hidden="true"><use href="#i-${id}"></use></svg>`;
+}
+
 const TERRAINS = {
-  bosque:  { label: "Bosque",  icon: "🌲", color: "var(--bosque)" },
-  montana: { label: "Montaña", icon: "⛰",  color: "var(--montana)" },
-  agua:    { label: "Agua",    icon: "🌊", color: "var(--agua)" },
+  bosque:  { label: "Bosque",  icon: ico("tree"),     glyph: "tree",     color: "var(--bosque)" },
+  montana: { label: "Montaña", icon: ico("mountain"), glyph: "mountain", color: "var(--montana)" },
+  agua:    { label: "Agua",    icon: ico("wave"),     glyph: "wave",     color: "var(--agua)" },
 };
 
 /* Localizaciones del mapa del Viejo Mundo agrupadas por tipo de Terreno
@@ -428,7 +433,7 @@ function openMonster(idx) {
     fig.classList.add("sin-carta");
   }
 
-  $("#m-terrain").textContent = `${t.icon} ${t.label} · ${m.location}`;
+  $("#m-terrain").innerHTML = `${t.icon} ${t.label} · ${m.location}`;
   $("#m-name").textContent = m.name;
   $("#m-meta").textContent = `${d.tipo} · Nivel ${roman(m.level)} · Reserva de Vida: ${d.vida} · Debilidad: ${m.weakLocation}`;
   $("#m-narrativa").textContent = loreFor(m.name);
@@ -440,19 +445,13 @@ function openMonster(idx) {
   show("screen-monstruo");
 }
 
-function rollDecision() {
-  const m = state.active[currentIdx];
-  const d = MONSTERS_DATA[m.name];
-  const kind = pick(["buena", "mala", "estandar"]);
-  const pool = { buena: d.buenas, mala: d.malas, estandar: d.estandar }[kind] || [];
-  const texto = pool.length ? pick(pool) : "Avanzas hacia la bestia con la plata desenvainada.";
-  const efecto = pick(DECISION_EFFECTS[kind]);
-  const k = DECISION_KINDS[kind];
+let rolling = false;
 
+function revealDecision(kind, texto, efecto) {
+  const k = DECISION_KINDS[kind];
   const box = $("#decision-result");
-  // reinicia la animación de revelado
   box.classList.add("hidden");
-  void box.offsetWidth;
+  void box.offsetWidth; // reinicia la animación de revelado
   box.style.setProperty("--dcolor", k.color);
   $("#d-tag").textContent = k.tag;
   $("#d-texto").textContent = "«" + texto + "»";
@@ -460,6 +459,40 @@ function rollDecision() {
   box.classList.remove("hidden");
   $("#btn-decision").classList.add("hidden");
   $("#combat-actions").classList.remove("hidden");
+}
+
+function rollDecision() {
+  if (rolling) return;
+  const m = state.active[currentIdx];
+  const d = MONSTERS_DATA[m.name];
+  const kind = pick(["buena", "mala", "estandar"]);
+  const pool = { buena: d.buenas, mala: d.malas, estandar: d.estandar }[kind] || [];
+  const texto = pool.length ? pick(pool) : "Avanzas hacia la bestia con la plata desenvainada.";
+  const efecto = pick(DECISION_EFFECTS[kind]);
+
+  if (REDUCED_MOTION) {
+    revealDecision(kind, texto, efecto);
+    return;
+  }
+
+  // Tirada dramática: el medallón gira mientras el destino decide.
+  rolling = true;
+  const overlay = $("#roll-overlay");
+  $("#decision-result").classList.add("hidden");
+  $("#btn-decision").disabled = true;
+  $("#btn-redecision").style.pointerEvents = "none";
+  overlay.classList.remove("hidden");
+  void overlay.offsetWidth;
+  overlay.classList.add("rolling");
+
+  setTimeout(() => {
+    overlay.classList.remove("rolling");
+    overlay.classList.add("hidden");
+    $("#btn-decision").disabled = false;
+    $("#btn-redecision").style.pointerEvents = "";
+    rolling = false;
+    revealDecision(kind, texto, efecto);
+  }, 950);
 }
 
 $("#btn-decision").addEventListener("click", rollDecision);
@@ -521,7 +554,8 @@ function resolveVictory() {
   }
 
   showResolution({
-    title: "⚔ La bestia ha caído",
+    icon: "swords",
+    title: "La bestia ha caído",
     sub: "El contrato está cumplido. Cobra tu recompensa, brujo.",
     steps,
     spawnHtml,
@@ -546,7 +580,8 @@ function resolveFlee() {
   ];
 
   showResolution({
-    title: "🌫 El monstruo huyó del combate",
+    icon: "wind",
+    title: "El monstruo huyó del combate",
     sub: "Noqueado, pero la bestia quedó al borde de la muerte (0-1 cartas en su Reserva de Vida).",
     steps,
     spawnHtml: null,
@@ -567,7 +602,8 @@ function resolveDefeat() {
   ];
 
   showResolution({
-    title: "☠ La bestia te venció",
+    icon: "skull",
+    title: "La bestia te venció",
     sub: "Derrota Absoluta: fuiste Noqueado y el monstruo conservó 2 o más cartas de Vida.",
     steps,
     spawnHtml: null,
@@ -576,8 +612,8 @@ function resolveDefeat() {
   });
 }
 
-function showResolution({ title, sub, steps, spawnHtml, terrainColor, grim }) {
-  $("#res-title").textContent = title;
+function showResolution({ icon, title, sub, steps, spawnHtml, terrainColor, grim }) {
+  $("#res-title").innerHTML = (icon ? ico(icon) + " " : "") + title;
   $("#res-sub").textContent = sub;
   const ul = $("#res-steps");
   ul.innerHTML = "";
@@ -642,7 +678,7 @@ function brujosOutcome(attackerWon) {
   loseList.innerHTML = "";
 
   if (attackerWon) {
-    $("#bw-title").textContent = "⚔ Vencedor: Brujo Atacante";
+    $("#bw-title").innerHTML = ico("trophy") + " Vencedor: Brujo Atacante";
     $("#bl-title").textContent = "Brujo Defensor";
     [
       "Toma 1 <strong>Trofeo de Brujo</strong> de la Escuela derrotada (si aún no lo tienes: máximo 1 por Escuela).",
@@ -657,7 +693,7 @@ function brujosOutcome(attackerWon) {
       "No pierdes ninguno de tus Trofeos.",
     ].forEach((h) => { const li = document.createElement("li"); li.innerHTML = h; loseList.appendChild(li); });
   } else {
-    $("#bw-title").textContent = "🛡 Vencedor: Brujo Defensor";
+    $("#bw-title").innerHTML = ico("trophy") + " Vencedor: Brujo Defensor";
     $("#bl-title").textContent = "Brujo Atacante";
     [
       "Gana <strong>Oro según la Reputación del oponente</strong> (1, 2 o 3 del Marcador de Trofeo).",
@@ -692,7 +728,7 @@ function dagonOutcome(drivenAway) {
 
   let items;
   if (drivenAway) {
-    $("#dg-title").textContent = "🌊 Dagon fue ahuyentado";
+    $("#dg-title").innerHTML = ico("wave") + " Dagon fue ahuyentado";
     items = [
       "Se cumple si <strong>ganaste el Combate</strong> o si fuiste derrotado pero Dagon quedó con <strong>0 o 1 cartas</strong> en su Reserva de Vida.",
       "Mueve la <strong>miniatura de Dagon</strong> a la casilla del Medidor de Peligro que corresponda al número de jugadores de tu partida.",
@@ -703,7 +739,7 @@ function dagonOutcome(drivenAway) {
       "Procede a la <strong>Fase III</strong> de tu Turno.",
     ];
   } else {
-    $("#dg-title").textContent = "☠ Derrota Total";
+    $("#dg-title").innerHTML = ico("skull") + " Derrota Total";
     items = [
       "Te quedaste <strong>sin cartas</strong> y Dagon conservó <strong>2 o más</strong> en su Reserva de Vida.",
       "Dagon <strong>permanece emergido</strong> en su Localización del Medidor de Peligro: las aguas siguen siendo suyas.",
