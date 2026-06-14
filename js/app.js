@@ -359,6 +359,8 @@ $("#btn-iniciar-caceria").addEventListener("click", () => {
 
 /* ---------------- 3. Tablero Principal ---------------- */
 
+let spawnedIdx = null; // índice de un monstruo recién aparecido (para animarlo)
+
 function renderTablero() {
   const wrap = $("#board-cards");
   wrap.innerHTML = "";
@@ -371,9 +373,13 @@ function renderTablero() {
     card.style.setProperty("--tcolor", t.color);
     card.style.setProperty("--i", idx);
     const artUrl = img || TERRAIN_IMG[m.terrain];
+    if (idx === spawnedIdx) card.classList.add("mcard--spawn");
     card.innerHTML = `
       <span class="mcard-level">Nivel ${roman(m.level)}</span>
-      <span class="mcard-art${img ? "" : " is-emblema"}" style="--art:url('${artUrl}')"></span>
+      <span class="mcard-art-wrap">
+        <img class="mcard-art-img${img ? "" : " is-emblema"}" src="${artUrl}" alt="" draggable="false">
+      </span>
+      <span class="mcard-newflag">${ico("medallion")} Nuevo rastro</span>
       <span class="mcard-body">
         <span class="mcard-terrain">${t.icon} ${t.label}</span>
         <span class="mcard-name">${m.name}</span>
@@ -389,6 +395,7 @@ function renderTablero() {
     attachTilt(card, 5);
     wrap.appendChild(card);
   });
+  spawnedIdx = null; // se consume tras renderizar
 
   const reserveTxt = state.reserveL1 > 0 ? ` · Reserva de Nivel I: ${state.reserveL1} ficha(s)` : "";
   const modeTxt = state.solo ? "Modo en Solitario" : `${state.playerCount} jugadores`;
@@ -422,7 +429,9 @@ function openMonster(idx) {
 
   const img = cardImage(m.name);
   const backdrop = img || TERRAIN_IMG[m.terrain];
-  stage.querySelector(".stage-backdrop").style.setProperty("--m-img", `url('${backdrop}')`);
+  // se fija directo en style (no vía variable CSS) para que la ruta
+  // resuelva relativa al documento y no al archivo CSS.
+  stage.querySelector(".stage-backdrop").style.backgroundImage = `url("${backdrop}")`;
 
   const fig = $("#m-card-float");
   if (img) {
@@ -543,6 +552,7 @@ function resolveVictory() {
     const nm = spawnAt(m.terrain, newLevel);
     if (nm) {
       state.active[currentIdx] = nm;
+      spawnedIdx = currentIdx; // se animará al volver al Tablero
       const t = TERRAINS[nm.terrain];
       spawnHtml = `<p class="sp-label">${fromReserve ? "Reaparición desde la pila de reserva" : "Un nuevo horror ocupa su lugar"}</p>
         <p class="sp-name">${nm.name} — Nivel ${roman(nm.level)}</p>

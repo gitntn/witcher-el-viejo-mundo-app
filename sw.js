@@ -3,7 +3,7 @@
    Estrategia: cache-first para los recursos propios; la red solo se usa
    como respaldo o para recursos externos (fuentes de Google). */
 
-const CACHE = "viejo-mundo-v2";
+const CACHE = "viejo-mundo-v3";
 
 const CARDS = [
   "arachas", "arpia", "arquespor", "barghest", "boira", "demonio-podrido",

@@ -72,9 +72,14 @@ la mesa de juego aunque no haya wifi.
   API, entradas escalonadas con desenfoque, cartas con **tilt 3D y brillo dinámico** al
   pasar el ratón, **medallón de brujo que vibra** (como cerca de un monstruo), **tirada
   animada del destino** al generar la Decisión de Combate (el medallón gira y cambia de
-  color antes de revelar el resultado), brasas flotantes en las pantallas de cacería
+  color antes de revelar el resultado), **aparición dramática del nuevo monstruo** en el
+  tablero tras una victoria (la carta se materializa girando, con un destello del color de
+  su terreno y un banderín «Nuevo rastro»), brasas flotantes en las pantallas de cacería
   (azules en la de Dagon), revelado dramático de la decisión, destellos en botones y grano
   cinematográfico. Todo se desactiva con `prefers-reduced-motion`.
+
+La foto de cada bestia se muestra como imagen destacada en su carta del tablero (con
+fundido inferior hacia los datos), y de fondo difuminado en la pantalla de cacería.
 
 ## 🗡 Cómo usarla
 
