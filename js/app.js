@@ -742,3 +742,10 @@ function boot() {
 }
 
 boot();
+
+/* Registro del Service Worker (uso sin conexión, app instalable). */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => { /* sin offline */ });
+  });
+}

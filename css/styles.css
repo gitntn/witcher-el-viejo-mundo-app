@@ -550,7 +550,7 @@ body{
   pointer-events:none;
 }
 .dagon-stage{--tcolor:#1d5b66;}
-.dagon-backdrop{--m-img:url("../assets/img/terrenos/agua.jpg");}
+.dagon-backdrop{--m-img:url("../assets/img/dagon.jpg"); background-position:center 45%;}
 .monster-veil{
   position:absolute; inset:0;
   z-index:1;
@@ -805,6 +805,22 @@ body{
 .spawn-note .sp-meta{color:var(--ink-dim); font-style:italic;}
 
 /* ============ lucha entre brujos ============ */
+#screen-brujos{position:relative;}
+#screen-brujos::before{
+  content:"";
+  position:fixed; inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(60% 45% at 18% 12%, rgba(125,135,148,.14), transparent 60%),
+    radial-gradient(60% 45% at 82% 14%, rgba(163,34,34,.12), transparent 60%),
+    radial-gradient(90% 70% at 50% 120%, rgba(0,0,0,.6), transparent 70%);
+  animation:brujos-glow 9s ease-in-out infinite alternate;
+}
+@keyframes brujos-glow{
+  from{opacity:.65;}
+  to{opacity:1;}
+}
 .info-list{list-style:none; color:var(--ink-dim);}
 .info-list li{padding:7px 0 7px 26px; position:relative;}
 .info-list li::before{content:"◆"; position:absolute; left:4px; color:var(--steel); font-size:.7rem; top:12px;}

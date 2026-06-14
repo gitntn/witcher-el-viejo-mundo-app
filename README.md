@@ -48,6 +48,14 @@ la mesa se concentre en jugar.
 La partida se guarda automáticamente en el navegador (`localStorage`): puedes cerrar la
 pestaña y retomar la cacería donde la dejaste.
 
+## 📱 App instalable y sin conexión (PWA)
+
+La app es una **Progressive Web App**: desde el móvil (o el escritorio) puedes
+**«Añadir a la pantalla de inicio» / «Instalar»** y se abrirá a pantalla completa, como
+una app nativa, con su propio icono. Un *service worker* cachea todo el contenido
+(las 29 cartas incluidas), así que una vez abierta **funciona sin conexión** — ideal para
+la mesa de juego aunque no haya wifi.
+
 ## 🎨 Imágenes y animaciones
 
 - **Las 29 cartas de monstruo reales** fotografiadas del juego y recortadas
@@ -72,17 +80,22 @@ Es una web estática sin dependencias ni instalación:
 ## 📁 Estructura
 
 ```
-├── index.html          # Las 8 pantallas de la app
-├── css/styles.css      # Fantasía oscura + sistema de animaciones (tilt, embers, ken-burns)
-├── assets/img/
-│   ├── portada.jpg     # Portada del manual (fondo de inicio)
-│   ├── cartas/         # 29 fotos de cartas recortadas (todas las criaturas)
-│   └── terrenos/       # bosque.jpg, montana.jpg, agua.jpg
+├── index.html              # Las 8 pantallas de la app
+├── manifest.webmanifest    # Metadatos PWA (nombre, iconos, standalone)
+├── sw.js                   # Service worker: caché offline del app shell + cartas
+├── css/styles.css          # Fantasía oscura + animaciones (tilt, embers, ken-burns)
+├── assets/
+│   ├── img/
+│   │   ├── portada.jpg     # Portada del manual (fondo de inicio)
+│   │   ├── dagon.jpg       # Tormenta de Skellige (fondo de Dagon)
+│   │   ├── cartas/         # 29 fotos de cartas recortadas (todas las criaturas)
+│   │   └── terrenos/       # bosque.jpg, montana.jpg, agua.jpg
+│   └── icons/              # Iconos PWA + favicon + apple-touch-icon
 └── js/
-    ├── app.js          # Estado de partida, tablero, decisiones, resoluciones y tilt 3D
+    ├── app.js              # Estado de partida, tablero, decisiones, resoluciones, tilt 3D, SW
     └── data/
-        ├── monsters.js # 29 monstruos: nivel, vida, tipo, habilidad y ~70 textos c/u
-        └── images.js   # Mapa monstruo→carta, terrenos y portada
+        ├── monsters.js     # 29 monstruos: nivel, vida, tipo, habilidad y ~70 textos c/u
+        └── images.js       # Mapa monstruo→carta, terrenos y portada
 ```
 
 ## 🧌 Datos de monstruos
