@@ -417,25 +417,25 @@ function renderTablero() {
     const artUrl = img || TERRAIN_IMG[m.terrain];
     if (idx === spawnedIdx) card.classList.add("mcard--spawn");
     card.innerHTML = `
-      <span class="mcard-level">Nivel ${roman(m.level)}</span>
+      <div class="wk-banner">
+        <span class="wk-banner-label">${ico("medallion")} Rastro de debilidad</span>
+        <span class="wk-stepper">
+          <button class="wk-btn" data-idx="${idx}" data-delta="-1" aria-label="Localización anterior">−</button>
+          <span class="wk-num" id="wk-${idx}">${locLabel(m.terrain, m.weakNum)}</span>
+          <button class="wk-btn" data-idx="${idx}" data-delta="1" aria-label="Localización siguiente">+</button>
+        </span>
+      </div>
       <span class="mcard-art-wrap">
+        <span class="mcard-level">Nivel ${roman(m.level)}</span>
         <img class="mcard-art-img${img ? "" : " is-emblema"}" src="${artUrl}" alt="" draggable="false">
+        <span class="mcard-newflag">${ico("medallion")} Nuevo rastro</span>
       </span>
-      <span class="mcard-newflag">${ico("medallion")} Nuevo rastro</span>
       <span class="mcard-body">
         <span class="mcard-terrain">${t.icon} ${t.label}</span>
         <span class="mcard-name">${m.name}</span>
         <span class="mcard-type">${d.tipo} · Vida ${d.vida}</span>
         <ul class="mcard-stats">
           <li><span class="k">Localización activa</span><span class="v">${locLabel(m.terrain, m.locNum)}</span></li>
-          <li class="wk-row">
-            <span class="k">Rastro de debilidad <small>(mismo terreno, otra ciudad)</small></span>
-            <span class="wk-edit">
-              <button class="wk-btn" data-idx="${idx}" data-delta="-1" aria-label="Localización anterior">−</button>
-              <span class="v weak wk-num" id="wk-${idx}">${locLabel(m.terrain, m.weakNum)}</span>
-              <button class="wk-btn" data-idx="${idx}" data-delta="1" aria-label="Localización siguiente">+</button>
-            </span>
-          </li>
         </ul>
         <span class="mcard-cta">Rastrear y combatir →</span>
       </span>
