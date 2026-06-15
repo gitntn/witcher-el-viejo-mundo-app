@@ -103,6 +103,51 @@ body{
   100%{transform:translate(0,0);}
 }
 
+/* ---------- hoguera al fondo de la pantalla (fuego + chispas) ---------- */
+.hearth{
+  position:fixed; left:0; right:0; bottom:0;
+  height:46vh; z-index:0;
+  pointer-events:none; overflow:hidden;
+}
+.hearth-glow{
+  position:absolute; inset:0;
+  mix-blend-mode:screen;
+  background:
+    radial-gradient(150% 100% at 50% 142%, rgba(255,138,46,.38), rgba(178,48,14,.18) 36%, transparent 66%),
+    radial-gradient(60% 80% at 22% 140%, rgba(255,110,30,.30), transparent 60%),
+    radial-gradient(60% 80% at 78% 140%, rgba(255,90,24,.28), transparent 60%),
+    linear-gradient(0deg, rgba(120,30,10,.30), transparent 74%);
+  animation:hearth-flicker 4.5s ease-in-out infinite alternate;
+}
+.hearth-glow::after{
+  content:""; position:absolute; inset:0;
+  background:radial-gradient(120% 70% at 50% 145%, rgba(255,180,80,.22), transparent 55%);
+  mix-blend-mode:screen;
+  animation:hearth-flicker 2.7s ease-in-out infinite alternate-reverse;
+}
+@keyframes hearth-flicker{
+  0%{opacity:.7; transform:scaleY(1) translateY(0);}
+  50%{opacity:1; transform:scaleY(1.05) translateY(-1%);}
+  100%{opacity:.82; transform:scaleY(.98) translateY(0);}
+}
+.hearth-sparks{position:absolute; inset:0;}
+.hearth-sparks span{
+  position:absolute; bottom:-10px; left:var(--x, 50%);
+  width:var(--size, 3px); height:var(--size, 3px);
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,214,130,.95), rgba(255,108,28,.55) 55%, transparent 72%);
+  filter:blur(.3px);
+  opacity:0;
+  animation:spark-rise var(--dur, 8s) ease-in var(--del, 0s) infinite;
+  will-change:transform, opacity;
+}
+@keyframes spark-rise{
+  0%{transform:translateY(0) translateX(0) scale(1); opacity:0;}
+  8%{opacity:1;}
+  62%{opacity:.85;}
+  100%{transform:translateY(calc(-1 * var(--rise, 38vh))) translateX(var(--drift, 12px)) scale(.25); opacity:0;}
+}
+
 #app{position:relative; z-index:1; max-width:980px; margin:0 auto; padding:32px 18px 64px;}
 
 .hidden{display:none !important;}
@@ -1060,6 +1105,6 @@ body{
     animation-iteration-count:1 !important;
     transition-duration:.001s !important;
   }
-  .embers{display:none;}
+  .embers, .hearth-sparks{display:none;}
   .mcard, .m-card-float{transform:none !important;}
 }

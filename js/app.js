@@ -914,8 +914,26 @@ $("#btn-resume").addEventListener("click", () => {
   show("screen-tablero");
 });
 
+/* Crea las chispas de la hoguera del fondo con valores aleatorios. */
+function buildHearth() {
+  const wrap = document.querySelector(".hearth-sparks");
+  if (!wrap || REDUCED_MOTION) return;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  for (let i = 0; i < 24; i++) {
+    const s = document.createElement("span");
+    s.style.setProperty("--x", rnd(0, 100).toFixed(1) + "%");
+    s.style.setProperty("--size", rnd(2, 6).toFixed(1) + "px");
+    s.style.setProperty("--dur", rnd(5, 12).toFixed(1) + "s");
+    s.style.setProperty("--del", rnd(0, 9).toFixed(1) + "s");
+    s.style.setProperty("--rise", rnd(28, 46).toFixed(0) + "vh");
+    s.style.setProperty("--drift", rnd(-34, 34).toFixed(0) + "px");
+    wrap.appendChild(s);
+  }
+}
+
 function boot() {
   buildPlayerPicker();
+  buildHearth();
   attachTilt($("#m-card-float"), 9);
   const saved = load();
   if (saved) {
