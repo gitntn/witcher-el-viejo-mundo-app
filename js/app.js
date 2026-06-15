@@ -417,6 +417,10 @@ function renderTablero() {
     const artUrl = img || TERRAIN_IMG[m.terrain];
     if (idx === spawnedIdx) card.classList.add("mcard--spawn");
     card.innerHTML = `
+      <div class="terr-banner" style="background-image:url('${TERRAIN_IMG[m.terrain]}')">
+        ${ico(t.glyph, "terr-ico")}
+        <span class="terr-name">${t.label}</span>
+      </div>
       <div class="wk-banner">
         <span class="wk-banner-label">${ico("medallion")} Rastro de debilidad</span>
         <span class="wk-stepper">
@@ -431,7 +435,6 @@ function renderTablero() {
         <span class="mcard-newflag">${ico("medallion")} Nuevo rastro</span>
       </span>
       <span class="mcard-body">
-        <span class="mcard-terrain">${t.icon} ${t.label}</span>
         <span class="mcard-name">${m.name}</span>
         <span class="mcard-type">${d.tipo} · Vida ${d.vida}</span>
         <ul class="mcard-stats">

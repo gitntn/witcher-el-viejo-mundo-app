@@ -539,6 +539,37 @@ body{
 .mcard-stats .v{color:var(--ink);}
 .mcard-stats .v.weak{color:#c9a3a3;}
 
+/* ===== cabecera de terreno (imagen + icono + nombre), arriba del todo ===== */
+.terr-banner{
+  position:relative;
+  height:72px;
+  display:flex; align-items:center; gap:13px;
+  padding:0 18px;
+  background-size:cover;
+  background-position:center 40%;
+  border-bottom:1px solid color-mix(in srgb, var(--tcolor) 60%, transparent);
+  overflow:hidden;
+}
+.terr-banner::before{
+  content:"";
+  position:absolute; inset:0;
+  background:linear-gradient(90deg,
+    rgba(8,6,4,.88) 0%, rgba(8,6,4,.55) 55%,
+    color-mix(in srgb, var(--tcolor) 32%, rgba(8,6,4,.35)) 100%);
+}
+.terr-banner .terr-ico{
+  position:relative; z-index:1;
+  width:34px; height:34px; margin:0; flex:0 0 auto;
+  color:color-mix(in srgb, var(--tcolor) 65%, #ffffff);
+  filter:drop-shadow(0 0 10px color-mix(in srgb, var(--tcolor) 70%, transparent));
+}
+.terr-name{
+  position:relative; z-index:1;
+  font-family:var(--serif-display); font-weight:700;
+  font-size:1.15rem; letter-spacing:.28em; text-transform:uppercase;
+  color:#f4ead4; text-shadow:0 2px 8px rgba(0,0,0,.9);
+}
+
 /* ===== banner destacado del rastro de debilidad (arriba de la carta) ===== */
 .wk-banner{
   display:flex; flex-direction:column; align-items:center; gap:7px;
