@@ -538,6 +538,32 @@ body{
 .mcard-stats .k{color:var(--ink-faint); font-size:.8rem; letter-spacing:.12em; text-transform:uppercase; display:block;}
 .mcard-stats .v{color:var(--ink);}
 .mcard-stats .v.weak{color:#c9a3a3;}
+/* editor del rastro de debilidad (Nº 1–21) */
+.wk-row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.wk-edit{display:inline-flex; align-items:center; gap:6px; flex:0 0 auto;}
+.wk-num{
+  min-width:42px; text-align:center;
+  font-family:var(--serif-display); font-weight:700;
+  color:#e7c98f;
+}
+.wk-num.wk-bump{animation:wk-bump .35s var(--ease-dramatic);}
+@keyframes wk-bump{0%{transform:scale(1.35); color:var(--amber-hi);} 100%{transform:scale(1);}}
+.wk-btn{
+  width:26px; height:26px; flex:0 0 auto;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--serif-display); font-size:1.1rem; line-height:1;
+  color:var(--amber); cursor:pointer;
+  background:linear-gradient(180deg, #2a2014, #17110a);
+  border:1px solid var(--panel-edge); border-radius:6px;
+  transition:transform .15s var(--ease-dramatic), border-color .2s, color .2s, background .2s;
+}
+.wk-btn:hover{border-color:var(--amber-hi); color:var(--amber-hi); transform:translateY(-1px);}
+.wk-btn:active{transform:scale(.9);}
+.board-hint{
+  max-width:760px; margin:-6px auto 20px;
+  text-align:center; color:var(--ink-faint); font-size:.86rem; font-style:italic;
+}
+.board-hint .ico{color:var(--amber); width:1em; height:1em; vertical-align:-0.12em;}
 .mcard-cta{
   display:inline-block;
   margin-top:12px;

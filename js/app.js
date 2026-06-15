@@ -10,6 +10,10 @@
 
 const STORAGE_KEY = "viejoMundoCompanion.v1";
 
+/* Las debilidades se rastrean a una Localización numerada del tablero (1–21). */
+const WEAK_MIN = 1;
+const WEAK_MAX = 21;
+
 /* Devuelve el marcado de un icono SVG del sprite (#i-<id>). */
 function ico(id, extra) {
   return `<svg class="ico${extra ? " " + extra : ""}" aria-hidden="true"><use href="#i-${id}"></use></svg>`;
@@ -184,7 +188,23 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw);
-    return s && s.started ? s : null;
+    if (!s || !s.started) return null;
+    // migración: partidas antiguas tenían debilidad con nombre; ahora es nº 1–21
+    if (Array.isArray(s.active)) {
+      const used = s.active.filter((m) => m && typeof m.weakNum === "number").map((m) => m.weakNum);
+      s.active.forEach((m) => {
+        if (m && typeof m.weakNum !== "number") {
+          const pool = [];
+          for (let n = WEAK_MIN; n <= WEAK_MAX; n++) if (!used.includes(n)) pool.push(n);
+          const num = pool.length ? pool[Math.floor(Math.random() * pool.length)]
+                                  : WEAK_MIN + Math.floor(Math.random() * (WEAK_MAX - WEAK_MIN + 1));
+          m.weakNum = num;
+          used.push(num);
+          delete m.weakLocation;
+        }
+      });
+    }
+    return s;
   } catch (e) { return null; }
 }
 
@@ -209,16 +229,32 @@ function drawLocation(terrain, exclude) {
   return loc;
 }
 
-function spawnAt(terrain, level) {
+/* Números de Localización (1–21) ya usados como debilidad por otros monstruos
+   activos (no se repiten: una debilidad por localización). */
+function usedWeakNums(skipIdx) {
+  return state.active
+    .filter((m, i) => m && i !== skipIdx)
+    .map((m) => m.weakNum);
+}
+
+function randomWeakNum(skipIdx) {
+  const used = usedWeakNums(skipIdx);
+  const pool = [];
+  for (let n = WEAK_MIN; n <= WEAK_MAX; n++) {
+    if (!used.includes(n)) pool.push(n);
+  }
+  return pool.length ? pick(pool) : WEAK_MIN + Math.floor(Math.random() * (WEAK_MAX - WEAK_MIN + 1));
+}
+
+function spawnAt(terrain, level, skipIdx) {
   const name = drawMonster(level);
   if (!name) return null;
-  const location = drawLocation(terrain);
   return {
     name,
     level: MONSTERS_DATA[name].nivel,
     terrain,
-    location,
-    weakLocation: drawLocation(terrain, location),
+    location: drawLocation(terrain),
+    weakNum: randomWeakNum(skipIdx),
   };
 }
 
@@ -233,7 +269,9 @@ function initialSpawns() {
   } else {
     levels = [1, 1, 1]; // 3-5 jugadores: 3 de Nivel I
   }
-  state.active = terrains.map((t, i) => spawnAt(t, levels[i]));
+  // se construye de forma secuencial para que cada debilidad (1–21) sea única
+  state.active = [];
+  terrains.forEach((t, i) => { state.active.push(spawnAt(t, levels[i])); });
 }
 
 /* ---------------- Navegación ---------------- */
@@ -369,8 +407,10 @@ function renderTablero() {
     const t = TERRAINS[m.terrain];
     const d = MONSTERS_DATA[m.name];
     const img = cardImage(m.name);
-    const card = document.createElement("button");
+    const card = document.createElement("div");
     card.className = "mcard";
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
     card.style.setProperty("--tcolor", t.color);
     card.style.setProperty("--i", idx);
     const artUrl = img || TERRAIN_IMG[m.terrain];
@@ -387,12 +427,30 @@ function renderTablero() {
         <span class="mcard-type">${d.tipo} · Vida ${d.vida}</span>
         <ul class="mcard-stats">
           <li><span class="k">Localización activa</span><span class="v">${m.location}</span></li>
-          <li><span class="k">Localización de debilidad</span><span class="v weak">${m.weakLocation}</span></li>
+          <li class="wk-row">
+            <span class="k">Rastro de debilidad</span>
+            <span class="wk-edit">
+              <button class="wk-btn" data-idx="${idx}" data-delta="-1" aria-label="Mover la debilidad atrás">−</button>
+              <span class="v weak wk-num" id="wk-${idx}">Nº ${m.weakNum}</span>
+              <button class="wk-btn" data-idx="${idx}" data-delta="1" aria-label="Mover la debilidad adelante">+</button>
+            </span>
+          </li>
         </ul>
         <span class="mcard-cta">Rastrear y combatir →</span>
       </span>
       <span class="mcard-glare"></span>`;
-    card.addEventListener("click", () => openMonster(idx));
+    // los pasos +/- editan la debilidad sin abrir el combate
+    card.querySelectorAll(".wk-btn").forEach((b) => {
+      b.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        changeWeak(idx, parseInt(b.dataset.delta, 10));
+      });
+    });
+    const open = () => openMonster(idx);
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", (ev) => {
+      if (ev.target === card && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); open(); }
+    });
     attachTilt(card, 5);
     wrap.appendChild(card);
   });
@@ -401,6 +459,31 @@ function renderTablero() {
   const reserveTxt = state.reserveL1 > 0 ? ` · Reserva de Nivel I: ${state.reserveL1} ficha(s)` : "";
   const modeTxt = state.solo ? "Modo en Solitario" : `${state.playerCount} jugadores`;
   $("#board-status").textContent = `${modeTxt}${reserveTxt}`;
+}
+
+/* Mueve el rastro de debilidad de un monstruo dentro de 1–21, saltando los
+   números ya ocupados por las debilidades de los otros monstruos (no pueden
+   coincidir, igual que no se coloca una debilidad donde ya hay un brujo). */
+function changeWeak(idx, delta) {
+  const m = state.active[idx];
+  if (!m) return;
+  const used = usedWeakNums(idx);
+  let n = m.weakNum;
+  for (let step = 0; step < WEAK_MAX; step++) {
+    n += delta;
+    if (n > WEAK_MAX) n = WEAK_MIN;
+    if (n < WEAK_MIN) n = WEAK_MAX;
+    if (!used.includes(n)) break;
+  }
+  m.weakNum = n;
+  save();
+  const el = document.getElementById("wk-" + idx);
+  if (el) {
+    el.textContent = "Nº " + n;
+    el.classList.remove("wk-bump");
+    void el.offsetWidth;
+    el.classList.add("wk-bump");
+  }
 }
 
 $("#btn-reset").addEventListener("click", () => {
@@ -445,7 +528,7 @@ function openMonster(idx) {
 
   $("#m-terrain").innerHTML = `${t.icon} ${t.label} · ${m.location}`;
   $("#m-name").textContent = m.name;
-  $("#m-meta").textContent = `${d.tipo} · Nivel ${roman(m.level)} · Reserva de Vida: ${d.vida} · Debilidad: ${m.weakLocation}`;
+  $("#m-meta").textContent = `${d.tipo} · Nivel ${roman(m.level)} · Reserva de Vida: ${d.vida} · Debilidad: Nº ${m.weakNum}`;
   $("#m-narrativa").textContent = loreFor(m.name);
   $("#m-habilidad").textContent = d.habilidad;
 
@@ -550,14 +633,14 @@ function resolveVictory() {
     } else {
       newLevel = Math.min(m.level + 1, 3);
     }
-    const nm = spawnAt(m.terrain, newLevel);
+    const nm = spawnAt(m.terrain, newLevel, currentIdx);
     if (nm) {
       state.active[currentIdx] = nm;
       spawnedIdx = currentIdx; // se animará al volver al Tablero
       const t = TERRAINS[nm.terrain];
       spawnHtml = `<p class="sp-label">${fromReserve ? "Reaparición desde la pila de reserva" : "Un nuevo horror ocupa su lugar"}</p>
         <p class="sp-name">${nm.name} — Nivel ${roman(nm.level)}</p>
-        <p class="sp-meta">${t.icon} ${t.label} · aparece en <strong>${nm.location}</strong> · debilidad: ${nm.weakLocation}</p>`;
+        <p class="sp-meta">${t.icon} ${t.label} · aparece en <strong>${nm.location}</strong> · rastro de debilidad: <strong>Nº ${nm.weakNum}</strong></p>`;
     } else {
       state.active.splice(currentIdx, 1);
       spawnHtml = `<p class="sp-label">Las pilas están vacías</p><p class="sp-meta">No quedan fichas de Monstruo disponibles de ese nivel.</p>`;
@@ -577,15 +660,14 @@ function resolveVictory() {
 function resolveFlee() {
   const m = state.active[currentIdx];
   const oldLoc = m.location;
-  // Diseño de la app: el monstruo huye a su Localización de Debilidad y sana por completo.
-  m.location = m.weakLocation;
-  m.weakLocation = drawLocation(m.terrain, m.location);
+  // El monstruo huye a la Localización de su rastro de debilidad y sana por completo.
+  m.location = "su rastro de debilidad (Nº " + m.weakNum + ")";
 
   const steps = [
     "Ganas <strong>2 de Oro</strong> por ahuyentar a la bestia.",
     "Añade una <strong>Carta de Acción de coste 0</strong> a tu pila de descartes.",
-    `El monstruo escapa de <strong>${oldLoc}</strong> hacia su Localización de Debilidad: <strong>${m.location}</strong>.`,
-    "La bestia descansa y <strong>se cura por completo</strong>: el próximo brujo la encontrará con la Reserva de Vida llena (nueva debilidad: <strong>" + m.weakLocation + "</strong>).",
+    `El monstruo escapa de <strong>${oldLoc}</strong> hacia la Localización de su <strong>rastro de debilidad (Nº ${m.weakNum})</strong>.`,
+    "La bestia descansa y <strong>se cura por completo</strong>: el próximo brujo la encontrará con la Reserva de Vida llena.",
     ...commonEnd(),
     "Procede a la <strong>Fase III</strong> de tu Turno.",
   ];
@@ -835,6 +917,7 @@ function boot() {
     // hay una partida guardada: se ofrece continuarla, pero siempre
     // arrancamos en la pantalla de inicio (selección de jugadores).
     state = saved;
+    save(); // fija en disco cualquier migración (p. ej. debilidad numérica)
     $("#btn-resume").classList.remove("hidden");
   }
   applyShow("screen-inicio");
