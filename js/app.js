@@ -10,10 +10,6 @@
 
 const STORAGE_KEY = "viejoMundoCompanion.v1";
 
-/* Las debilidades se rastrean a una Localización numerada del tablero (1–21). */
-const WEAK_MIN = 1;
-const WEAK_MAX = 21;
-
 /* Devuelve el marcado de un icono SVG del sprite (#i-<id>). */
 function ico(id, extra) {
   return `<svg class="ico${extra ? " " + extra : ""}" aria-hidden="true"><use href="#i-${id}"></use></svg>`;
@@ -25,13 +21,46 @@ const TERRAINS = {
   agua:    { label: "Agua",    icon: ico("wave"),     glyph: "wave",     color: "var(--agua)" },
 };
 
-/* Localizaciones del mapa del Viejo Mundo agrupadas por tipo de Terreno
-   (6 fichas de Localización por terreno, como las 18 del juego de mesa). */
+/* Las 18 Localizaciones numeradas del mapa, agrupadas por tipo de Terreno.
+   La ficha de debilidad de un monstruo se esconde SIEMPRE en una Localización
+   de su MISMO terreno, pero en una ciudad distinta a donde está el monstruo. */
 const LOCATIONS = {
-  bosque:  ["Brokilon", "Glenmore", "Burdorff", "Ellander", "Dol Blathanna", "Riedbrune"],
-  montana: ["Kaer Morhen", "Mahakam", "Ard Carraigh", "Ban Ard", "Kaer Seren", "Blaviken"],
-  agua:    ["Novigrad", "Cintra", "Cidaris", "Oxenfurt", "Vengerberg", "Attre"],
+  montana: [
+    { n: 2,  name: "Hengfors" },
+    { n: 3,  name: "Kaer Morhen" },
+    { n: 9,  name: "Cintra" },
+    { n: 11, name: "Beauclair" },
+    { n: 13, name: "Doldeth" },
+    { n: 18, name: "Ard Modron" },
+  ],
+  agua: [
+    { n: 1,  name: "Kaer Seren" },
+    { n: 4,  name: "Ban Ard" },
+    { n: 5,  name: "Cidaris" },
+    { n: 12, name: "Glenmore" },
+    { n: 14, name: "Loc Ichaer" },
+    { n: 15, name: "Gorthur Gvaed" },
+  ],
+  bosque: [
+    { n: 6,  name: "Novigrad" },
+    { n: 7,  name: "Vizima" },
+    { n: 8,  name: "Vengerberg" },
+    { n: 10, name: "Haern Caduch" },
+    { n: 16, name: "Dhuwod" },
+    { n: 17, name: "Stygga" },
+  ],
 };
+
+function locName(terrain, num) {
+  const l = LOCATIONS[terrain].find((x) => x.n === num);
+  return l ? l.name : "?";
+}
+function locLabel(terrain, num) {
+  return "Nº " + num + " · " + locName(terrain, num);
+}
+function terrainNums(terrain) {
+  return LOCATIONS[terrain].map((l) => l.n).sort((a, b) => a - b);
+}
 
 /* Compensaciones iniciales por número de jugadores (Reglamento, pág. 8). */
 const SETUP_TABLE = {
@@ -169,12 +198,7 @@ function newState(playerCount) {
     reserveL1: playerCount === 4 ? 1 : playerCount === 5 ? 2 : 0,
     pools: { 1: shuffle(monstersByLevel(1)), 2: shuffle(monstersByLevel(2)), 3: shuffle(monstersByLevel(3)) },
     defeated: { 1: [], 2: [], 3: [] },
-    locPools: {
-      bosque: shuffle(LOCATIONS.bosque),
-      montana: shuffle(LOCATIONS.montana),
-      agua: shuffle(LOCATIONS.agua),
-    },
-    active: [],          // [{ name, level, terrain, location, weakLocation }]
+    active: [],          // [{ name, level, terrain, locNum, weakNum }]
     log: [],
   };
 }
@@ -189,21 +213,23 @@ function load() {
     if (!raw) return null;
     const s = JSON.parse(raw);
     if (!s || !s.started) return null;
-    // migración: partidas antiguas tenían debilidad con nombre; ahora es nº 1–21
+    // migración: localización activa y debilidad ahora son nº de Localización
+    // del MISMO terreno (ciudades distintas).
     if (Array.isArray(s.active)) {
-      const used = s.active.filter((m) => m && typeof m.weakNum === "number").map((m) => m.weakNum);
       s.active.forEach((m) => {
-        if (m && typeof m.weakNum !== "number") {
-          const pool = [];
-          for (let n = WEAK_MIN; n <= WEAK_MAX; n++) if (!used.includes(n)) pool.push(n);
-          const num = pool.length ? pool[Math.floor(Math.random() * pool.length)]
-                                  : WEAK_MIN + Math.floor(Math.random() * (WEAK_MAX - WEAK_MIN + 1));
-          m.weakNum = num;
-          used.push(num);
-          delete m.weakLocation;
+        if (!m || !LOCATIONS[m.terrain]) return;
+        const nums = terrainNums(m.terrain);
+        const valid = (x) => nums.includes(x);
+        if (!valid(m.locNum) || !valid(m.weakNum) || m.locNum === m.weakNum) {
+          const pool = shuffle(nums.slice());
+          m.locNum = pool[0];
+          m.weakNum = pool[1];
         }
+        delete m.weakLocation;
+        delete m.location;
       });
     }
+    delete s.locPools;
     return s;
   } catch (e) { return null; }
 }
@@ -218,43 +244,18 @@ function drawMonster(level) {
   return state.pools[level].pop() || null;
 }
 
-function drawLocation(terrain, exclude) {
-  let pool = state.locPools[terrain].filter((l) => l !== exclude);
-  if (pool.length === 0) pool = LOCATIONS[terrain].filter((l) => l !== exclude);
-  const loc = pick(pool);
-  state.locPools[terrain] = state.locPools[terrain].filter((l) => l !== loc);
-  if (state.locPools[terrain].length === 0) {
-    state.locPools[terrain] = shuffle(LOCATIONS[terrain]);
-  }
-  return loc;
-}
-
-/* Números de Localización (1–21) ya usados como debilidad por otros monstruos
-   activos (no se repiten: una debilidad por localización). */
-function usedWeakNums(skipIdx) {
-  return state.active
-    .filter((m, i) => m && i !== skipIdx)
-    .map((m) => m.weakNum);
-}
-
-function randomWeakNum(skipIdx) {
-  const used = usedWeakNums(skipIdx);
-  const pool = [];
-  for (let n = WEAK_MIN; n <= WEAK_MAX; n++) {
-    if (!used.includes(n)) pool.push(n);
-  }
-  return pool.length ? pick(pool) : WEAK_MIN + Math.floor(Math.random() * (WEAK_MAX - WEAK_MIN + 1));
-}
-
-function spawnAt(terrain, level, skipIdx) {
+function spawnAt(terrain, level) {
   const name = drawMonster(level);
   if (!name) return null;
+  // dos Localizaciones distintas del mismo terreno: dónde está y dónde se
+  // esconde su debilidad (ciudad diferente).
+  const nums = shuffle(terrainNums(terrain));
   return {
     name,
     level: MONSTERS_DATA[name].nivel,
     terrain,
-    location: drawLocation(terrain),
-    weakNum: randomWeakNum(skipIdx),
+    locNum: nums[0],
+    weakNum: nums[1],
   };
 }
 
@@ -426,13 +427,13 @@ function renderTablero() {
         <span class="mcard-name">${m.name}</span>
         <span class="mcard-type">${d.tipo} · Vida ${d.vida}</span>
         <ul class="mcard-stats">
-          <li><span class="k">Localización activa</span><span class="v">${m.location}</span></li>
+          <li><span class="k">Localización activa</span><span class="v">${locLabel(m.terrain, m.locNum)}</span></li>
           <li class="wk-row">
-            <span class="k">Rastro de debilidad</span>
+            <span class="k">Rastro de debilidad <small>(mismo terreno, otra ciudad)</small></span>
             <span class="wk-edit">
-              <button class="wk-btn" data-idx="${idx}" data-delta="-1" aria-label="Mover la debilidad atrás">−</button>
-              <span class="v weak wk-num" id="wk-${idx}">Nº ${m.weakNum}</span>
-              <button class="wk-btn" data-idx="${idx}" data-delta="1" aria-label="Mover la debilidad adelante">+</button>
+              <button class="wk-btn" data-idx="${idx}" data-delta="-1" aria-label="Localización anterior">−</button>
+              <span class="v weak wk-num" id="wk-${idx}">${locLabel(m.terrain, m.weakNum)}</span>
+              <button class="wk-btn" data-idx="${idx}" data-delta="1" aria-label="Localización siguiente">+</button>
             </span>
           </li>
         </ul>
@@ -461,25 +462,23 @@ function renderTablero() {
   $("#board-status").textContent = `${modeTxt}${reserveTxt}`;
 }
 
-/* Mueve el rastro de debilidad de un monstruo dentro de 1–21, saltando los
-   números ya ocupados por las debilidades de los otros monstruos (no pueden
-   coincidir, igual que no se coloca una debilidad donde ya hay un brujo). */
+/* Recorre el rastro de debilidad por las Localizaciones del MISMO terreno,
+   saltando la ciudad donde está el monstruo (debe ser una ciudad distinta).
+   Así puedes moverlo si una debilidad caería donde ya hay un brujo. */
 function changeWeak(idx, delta) {
   const m = state.active[idx];
   if (!m) return;
-  const used = usedWeakNums(idx);
-  let n = m.weakNum;
-  for (let step = 0; step < WEAK_MAX; step++) {
-    n += delta;
-    if (n > WEAK_MAX) n = WEAK_MIN;
-    if (n < WEAK_MIN) n = WEAK_MAX;
-    if (!used.includes(n)) break;
+  const nums = terrainNums(m.terrain);
+  let i = nums.indexOf(m.weakNum);
+  for (let step = 0; step < nums.length; step++) {
+    i = (i + delta + nums.length) % nums.length;
+    if (nums[i] !== m.locNum) break;
   }
-  m.weakNum = n;
+  m.weakNum = nums[i];
   save();
   const el = document.getElementById("wk-" + idx);
   if (el) {
-    el.textContent = "Nº " + n;
+    el.textContent = locLabel(m.terrain, m.weakNum);
     el.classList.remove("wk-bump");
     void el.offsetWidth;
     el.classList.add("wk-bump");
@@ -526,9 +525,9 @@ function openMonster(idx) {
     fig.classList.add("sin-carta");
   }
 
-  $("#m-terrain").innerHTML = `${t.icon} ${t.label} · ${m.location}`;
+  $("#m-terrain").innerHTML = `${t.icon} ${t.label} · ${locLabel(m.terrain, m.locNum)}`;
   $("#m-name").textContent = m.name;
-  $("#m-meta").textContent = `${d.tipo} · Nivel ${roman(m.level)} · Reserva de Vida: ${d.vida} · Debilidad: Nº ${m.weakNum}`;
+  $("#m-meta").textContent = `${d.tipo} · Nivel ${roman(m.level)} · Reserva de Vida: ${d.vida} · En ${locLabel(m.terrain, m.locNum)} · Debilidad: ${locLabel(m.terrain, m.weakNum)}`;
   $("#m-narrativa").textContent = loreFor(m.name);
   $("#m-habilidad").textContent = d.habilidad;
 
@@ -633,14 +632,14 @@ function resolveVictory() {
     } else {
       newLevel = Math.min(m.level + 1, 3);
     }
-    const nm = spawnAt(m.terrain, newLevel, currentIdx);
+    const nm = spawnAt(m.terrain, newLevel);
     if (nm) {
       state.active[currentIdx] = nm;
       spawnedIdx = currentIdx; // se animará al volver al Tablero
       const t = TERRAINS[nm.terrain];
       spawnHtml = `<p class="sp-label">${fromReserve ? "Reaparición desde la pila de reserva" : "Un nuevo horror ocupa su lugar"}</p>
         <p class="sp-name">${nm.name} — Nivel ${roman(nm.level)}</p>
-        <p class="sp-meta">${t.icon} ${t.label} · aparece en <strong>${nm.location}</strong> · rastro de debilidad: <strong>Nº ${nm.weakNum}</strong></p>`;
+        <p class="sp-meta">${t.icon} ${t.label} · aparece en <strong>${locLabel(nm.terrain, nm.locNum)}</strong> · debilidad: <strong>${locLabel(nm.terrain, nm.weakNum)}</strong></p>`;
     } else {
       state.active.splice(currentIdx, 1);
       spawnHtml = `<p class="sp-label">Las pilas están vacías</p><p class="sp-meta">No quedan fichas de Monstruo disponibles de ese nivel.</p>`;
@@ -659,15 +658,18 @@ function resolveVictory() {
 
 function resolveFlee() {
   const m = state.active[currentIdx];
-  const oldLoc = m.location;
-  // El monstruo huye a la Localización de su rastro de debilidad y sana por completo.
-  m.location = "su rastro de debilidad (Nº " + m.weakNum + ")";
+  const oldLoc = locLabel(m.terrain, m.locNum);
+  // El monstruo huye a la Localización de su debilidad y sana; su debilidad
+  // se vuelve a esconder en otra ciudad del mismo terreno.
+  m.locNum = m.weakNum;
+  const otras = terrainNums(m.terrain).filter((x) => x !== m.locNum);
+  m.weakNum = pick(otras);
 
   const steps = [
     "Ganas <strong>2 de Oro</strong> por ahuyentar a la bestia.",
     "Añade una <strong>Carta de Acción de coste 0</strong> a tu pila de descartes.",
-    `El monstruo escapa de <strong>${oldLoc}</strong> hacia la Localización de su <strong>rastro de debilidad (Nº ${m.weakNum})</strong>.`,
-    "La bestia descansa y <strong>se cura por completo</strong>: el próximo brujo la encontrará con la Reserva de Vida llena.",
+    `El monstruo escapa de <strong>${oldLoc}</strong> a la Localización de su debilidad: <strong>${locLabel(m.terrain, m.locNum)}</strong>.`,
+    `La bestia se cura por completo y su <strong>debilidad se reubica</strong> en otra ciudad del mismo terreno: <strong>${locLabel(m.terrain, m.weakNum)}</strong>.`,
     ...commonEnd(),
     "Procede a la <strong>Fase III</strong> de tu Turno.",
   ];
@@ -689,7 +691,7 @@ function resolveDefeat() {
     `Toma 1 <strong>Ficha de Rastro</strong> de Terreno ${t.icon} ${t.label} (si aún no la tienes): la próxima vez tomarás el primer Turno contra esta bestia.`,
     "Añade una <strong>Carta de Acción de coste 0</strong> a tu pila de descartes.",
     "Solo durante este Turno: en la <strong>Fase III robas un máximo de 2 cartas</strong>.",
-    `El monstruo permanece en <strong>${m.location}</strong> y se curará por completo antes del próximo Combate.`,
+    `El monstruo permanece en <strong>${locLabel(m.terrain, m.locNum)}</strong> y se curará por completo antes del próximo Combate.`,
     ...commonEnd(),
     "Tu Turno termina. Lámete las heridas, brujo: la bestia seguirá ahí mañana.",
   ];
